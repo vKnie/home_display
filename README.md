@@ -1,5 +1,3 @@
-# home_display
-
 # Outil d'affichage d'informations
 
 Ce projet a été réalisé dans le cadre de mon alternance au sein de l'UFR-ST. L'objectif était de créer une application permettant d'afficher des informations pratiques de manière mensuelle sur un écran situé à l'entrée de l'accueil.
