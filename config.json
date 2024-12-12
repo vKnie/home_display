@@ -1,0 +1,26 @@
+{
+    "paysage-usa-yosemite.jpg": {
+        "show": 1,
+        "delay": 5,
+        "order": 2,
+        "start_date": "2024-12-10",
+        "end_date": "2024-12-18",
+        "background_color": "#859498"
+    },
+    "monument-valley-ouest-americain.jpg": {
+        "show": 1,
+        "delay": 5,
+        "order": 1,
+        "start_date": "",
+        "end_date": "",
+        "background_color": "#936167"
+    },
+    "is11.jpg": {
+        "show": 1,
+        "delay": 5,
+        "order": 3,
+        "start_date": "",
+        "end_date": "",
+        "background_color": "#7fb0f0"
+    }
+}
