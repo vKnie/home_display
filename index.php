@@ -2,7 +2,7 @@
 defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 
-$imageFolder = JPATH_ROOT . './img/';
+$imageFolder = JPATH_ROOT . '/img/';
 $jsonFile = $imageFolder . 'config.json';
 
 if (!file_exists($imageFolder)) {
@@ -22,7 +22,7 @@ $app = Factory::getApplication();
 
 function getDominantColor($imagePath) {
 	if (!file_exists($imagePath)) {
-		return '#FFFFFF'; // Retourne blanc si l'image n'existe pas
+		return '#FFFFFF';
 	}
 
 	$imageInfo = getimagesize($imagePath);
@@ -39,7 +39,7 @@ function getDominantColor($imagePath) {
 			$image = imagecreatefromgif($imagePath);
 			break;
 		default:
-			return '#FFFFFF'; // Retourne blanc si le type d'image n'est pas supporté
+			return '#FFFFFF';
 	}
 
 	$resizedImage = imagecreatetruecolor(1, 1);
@@ -159,16 +159,16 @@ foreach ($files as $file) {
 
 	<h2>Liste des fichiers</h2>
 	<form method="POST">
-		<table>
+		<table id="sortableTable">
 			<thead>
 				<tr>
-					<th>Ordre</th>
+					<th data-sort="number">Ordre</th>
 					<th>Nom du fichier</th>
 					<th>Image</th>
 					<th>Afficher</th>
 					<th>Délai (s)</th>
-					<th>Date début</th>
-					<th>Date fin</th>
+					<th data-sort="date">Date début</th>
+					<th data-sort="date">Date fin</th>
 					<th>Couleur de fond</th>
 					<th>Supprimer</th>
 				</tr>
@@ -204,12 +204,47 @@ foreach ($files as $file) {
 			</tbody>
 		</table>
 		<button type="submit" name="update" class="btn-update">Mettre à jour</button>
-		<a href="index.php" class="btn-display">Affichage !</a>
 	</form>
 </div>
 
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const table = document.getElementById('sortableTable');
+		const headers = table.querySelectorAll('th[data-sort]');
+		const rows = table.querySelector('tbody').rows;
+
+		headers.forEach(header => {
+			header.addEventListener('click', () => {
+				const sortType = header.getAttribute('data-sort');
+				const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+				const isDescending = header.classList.contains('asc');
+
+				headers.forEach(h => h.classList.remove('asc', 'desc'));
+
+				header.classList.add(isDescending ? 'desc' : 'asc');
+
+				const sortedRows = Array.from(rows).sort((a, b) => {
+					const cellA = a.cells[columnIndex].querySelector('input')?.value || a.cells[columnIndex].innerText;
+					const cellB = b.cells[columnIndex].querySelector('input')?.value || b.cells[columnIndex].innerText;
+
+					if (sortType === 'number') {
+						return isDescending ? parseFloat(cellB) - parseFloat(cellA) : parseFloat(cellA) - parseFloat(cellB);
+					} else if (sortType === 'date') {
+						return isDescending ? new Date(cellB) - new Date(cellA) : new Date(cellA) - new Date(cellB);
+					} else {
+						return isDescending ? cellB.localeCompare(cellA) : cellA.localeCompare(cellB);
+					}
+				});
+
+				const tbody = table.querySelector('tbody');
+				tbody.innerHTML = '';
+				sortedRows.forEach(row => tbody.appendChild(row));
+			});
+		});
+	});
+</script>
+
 <style>
-	/* Formulaire d'upload */
 	.image-uploader form {
 		margin-bottom: 20px;
 		display: flex;
@@ -217,111 +252,173 @@ foreach ($files as $file) {
 		align-items: center;
 	}
 
+	/* Zone d'upload avant qu'un fichier ne soit sélectionné */
 	.image-uploader input[type="file"] {
 		margin-bottom: 10px;
-		padding: 10px;
-		border-radius: 5px;
+		padding: 12px 15px;
+		border-radius: 8px;
 		border: 1px solid #ddd;
 		width: 80%;
+		font-size: 14px;
+		background-color: #e8f5e9; /* Fond léger vert clair avant l'upload */
 	}
 
-	/* Style du tableau */
+	/* Bordure verte quand un fichier est sélectionné */
+	.image-uploader input[type="file"]:valid {
+		border-color: #45a049;
+	}
+
+	/* Table pour afficher les fichiers et actions */
 	.image-uploader table {
 		width: 100%;
 		border-collapse: collapse;
 		margin-top: 20px;
 	}
 
+	/* Styling général de la table */
 	.image-uploader table, .image-uploader th, .image-uploader td {
 		border: 1px solid #ddd;
 		padding: 12px;
 		text-align: center;
+		background-color: #fff;
+		font-size: 14px;
 	}
 
+	/* En-têtes de la table */
 	.image-uploader th {
-		background-color: #f2f2f2;
+		background-color: #f4f4f4;
 		font-weight: bold;
+		text-transform: uppercase;
 	}
 
+	/* Contenu des cellules */
 	.image-uploader td {
 		background-color: #fff;
+		height: 130px; /* Hauteur maximale pour chaque cellule */
+		overflow: hidden; /* Cache le contenu qui dépasse */
+		text-overflow: ellipsis; /* Affiche des points de suspension (...) pour le texte qui dépasse */
+		padding: 12px;
+		font-size: 14px;
+		vertical-align: middle; /* Aligne verticalement le contenu au centre */
 	}
 
-	/* Boutons */
+	/* Hauteur maximale des lignes */
+	.image-uploader tbody tr {
+		max-height: 120px; /* Hauteur maximale des lignes */
+		overflow: hidden; /* Cache le contenu excédentaire */
+		text-overflow: ellipsis;
+	}
+
+	/* Survol des lignes */
+	.image-uploader tbody tr:hover {
+		background-color: #f7f7f7;
+	}
+
+	/* Boutons d'upload, suppression et mise à jour */
 	.btn-upload, .btn-delete, .btn-update, .btn-display {
 		border: none;
-		border-radius: 5px;
-		padding: 10px 15px;
-		font-size: 14px;
+		border-radius: 8px;
+		padding: 10px 20px;
+		font-size: 16px;
 		cursor: pointer;
-		transition: background-color 0.3s ease;
+		transition: background-color 0.3s ease, transform 0.3s ease;
 	}
 
-	/* Bouton d'upload */
+	/* Bouton d'upload vert */
 	.btn-upload {
-		background-color: #4CAF50;
+		background-color: #45a049; /* Vert avant */
 		color: white;
 	}
 
+	/* Effet de survol du bouton d'upload */
 	.btn-upload:hover {
-		background-color: #45a049;
+		background-color: #4CAF50; /* Vert plus clair au survol */
+		transform: translateY(-2px);
 	}
 
-	/* Bouton de suppression */
+	/* Bouton de suppression rouge */
 	.btn-delete {
 		background-color: #f44336;
 		color: white;
 	}
 
+	/* Effet de survol du bouton de suppression */
 	.btn-delete:hover {
 		background-color: #e53935;
+		transform: translateY(-2px);
 	}
 
-	/* Bouton de mise à jour */
+	/* Bouton de mise à jour bleu */
 	.btn-update {
+		margin-top: 30px;
 		background-color: #2196F3;
 		color: white;
 	}
 
+	/* Effet de survol du bouton de mise à jour */
 	.btn-update:hover {
 		background-color: #1e88e5;
+		transform: translateY(-2px);
 	}
 
-	/* Bouton d'affichage */
-	.btn-display {
-		background-color: #4CAF50;
-		color: white;
-		text-decoration: none;
-	}
-
-	.btn-display:hover {
-		background-color: #45a049;
-	}
-
-	/* Changement de couleur sur les champs du formulaire au survol */
-	.image-uploader input[type="number"], .image-uploader input[type="date"], .image-uploader input[type="checkbox"] {
+	/* Inputs (numérique, date, checkbox) */
+	.image-uploader input[type="number"],
+	.image-uploader input[type="date"],
+	.image-uploader input[type="checkbox"] {
 		width: 100%;
-		border-radius: 5px;
-		padding: 8px;
+		border-radius: 8px;
+		padding: 10px;
 		border: 1px solid #ddd;
+		font-size: 14px;
+		background-color: #f9f9f9;
 	}
 
-	/* Pour un meilleur espacement des éléments */
+	/* Titre de la section */
 	.image-uploader h2 {
 		text-align: center;
 		color: #333;
 		margin-bottom: 20px;
+		font-size: 20px;
+		font-weight: bold;
 	}
 
-	/* Améliorer l'image dans le tableau */
+	/* Images dans la table */
 	.image-uploader img {
-		max-width: 100px;
-		max-height: 100px;
-		border-radius: 5px;
+		max-width: 120px;
+		max-height: 120px;
+		border-radius: 8px;
 	}
 
-	/* Ajouter un effet de survol sur les lignes du tableau */
-	.image-uploader tbody tr:hover {
-		background-color: #f1f1f1;
+	/* Table sortable */
+	#sortableTable th[data-sort] {
+		cursor: pointer;
+		position: relative;
+		background-color: #f9f9f9;
+		user-select: none;
+		padding-right: 25px;
+		transition: background-color 0.3s ease;
+	}
+
+	/* Survol des en-têtes pour le tri */
+	#sortableTable th[data-sort]:hover {
+		background-color: #d1cfcf;
+	}
+
+	/* Icônes de tri dans les en-têtes */
+	#sortableTable th[data-sort]::after {
+		content: '\25B2';
+		position: absolute;
+		right: 20px;
+		font-size: 0.9em;
+		opacity: 0.5;
+		transition: transform 0.3s ease, opacity 0.3s ease;
+	}
+
+	#sortableTable th[data-sort].desc::after {
+		content: '\25BC';
+	}
+
+	#sortableTable th[data-sort].asc::after {
+		opacity: 1;
 	}
 </style>
