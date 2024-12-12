@@ -191,7 +191,13 @@ foreach ($files as $file) {
 							<input type="date" name="images[<?php echo htmlspecialchars($file); ?>][start_date]" value="<?php echo htmlspecialchars($configData[$file]['start_date']); ?>">
 						</td>
 						<td>
-							<input type="date" name="images[<?php echo htmlspecialchars($file); ?>][end_date]" value="<?php echo htmlspecialchars($configData[$file]['end_date']); ?>">
+							<?php 
+							$endDate = $configData[$file]['end_date'];
+							$currentDate = date('Y-m-d');
+							
+							$style = ($endDate === $currentDate) ? 'color: red;' : '';
+							?>
+							<input type="date" name="images[<?php echo htmlspecialchars($file); ?>][end_date]" value="<?php echo htmlspecialchars($endDate); ?>" style="<?php echo $style; ?>">
 						</td>
 						<td>
 							<input type="color" name="images[<?php echo htmlspecialchars($file); ?>][background_color]" value="<?php echo htmlspecialchars($configData[$file]['background_color']); ?>">
